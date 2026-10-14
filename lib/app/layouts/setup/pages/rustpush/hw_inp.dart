@@ -8,6 +8,7 @@ import 'package:bluebubbles/app/layouts/settings/dialogs/custom_headers_dialog.d
 import 'package:bluebubbles/app/layouts/settings/widgets/layout/settings_section.dart';
 import 'package:bluebubbles/app/layouts/setup/dialogs/failed_to_scan_dialog.dart';
 import 'package:bluebubbles/app/layouts/setup/pages/page_template.dart';
+import 'package:bluebubbles/app/layouts/setup/pages/rustpush/premium_ui_preview.dart';
 import 'package:bluebubbles/app/layouts/setup/pages/sync/qr_code_scanner.dart';
 import 'package:bluebubbles/app/layouts/setup/setup_view.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
@@ -542,6 +543,16 @@ class HwInpState extends OptimizedState<HwInp> {
         ),
       ),
       subtitle: "",
+      belowSubtitle: staging == null ? Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 4),
+        child: OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PremiumUiPreview()),
+          ),
+          icon: const Icon(Icons.visibility_outlined),
+          label: const Text("Preview redesigned interface"),
+        ),
+      ) : null,
       customButton: Column(
         children: [
           ErrorText(parentController: controller),
