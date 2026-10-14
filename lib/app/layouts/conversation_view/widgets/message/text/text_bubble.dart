@@ -76,7 +76,17 @@ class _TextBubbleState extends CustomState<TextBubble, void, MessageWidgetContro
     super.initState();
   }
 
+  bool get premiumDarkMaterial => ss.settings.skin.value == Skins.Material &&
+      Theme.of(context).brightness == Brightness.dark;
+
+  bool get isIMessageConversation => controller.cvController?.chat.isIMessage ?? true;
+
   List<Color> getBubbleColors() {
+    if (selected && !iOS) return [context.theme.colorScheme.tertiaryContainer, context.theme.colorScheme.tertiaryContainer];
+    if (premiumDarkMaterial) {
+      final incoming = isIMessageConversation ? const Color(0xFF16408B) : const Color(0xFF245C39);
+      return [incoming, incoming];
+    }
     if (selected && !iOS) return [context.theme.colorScheme.tertiaryContainer, context.theme.colorScheme.tertiaryContainer];
     List<Color> bubbleColors = [context.theme.colorScheme.properSurface, context.theme.colorScheme.properSurface];
     if (ss.settings.colorfulBubbles.value && !message.isFromMe!) {
@@ -122,7 +132,9 @@ class _TextBubbleState extends CustomState<TextBubble, void, MessageWidgetContro
             right: message.isFromMe! && (!message.isBigEmoji) ? 10 : 0
           )),
         color: message.isFromMe! && !message.isBigEmoji && message.dateScheduled == null
-            ? (selected ? context.theme.colorScheme.tertiaryContainer : context.theme.colorScheme.primary)
+            ? (selected ? context.theme.colorScheme.tertiaryContainer : premiumDarkMaterial
+                ? (isIMessageConversation ? const Color(0xFF087DFF) : const Color(0xFF30B64B))
+                : context.theme.colorScheme.primary)
             : null,
         decoration: message.isFromMe! || message.isBigEmoji ? null : BoxDecoration(
           gradient: LinearGradient(
@@ -139,6 +151,8 @@ class _TextBubbleState extends CustomState<TextBubble, void, MessageWidgetContro
             message,
             colorOverride: message.dateScheduled != null ? context.theme.colorScheme.primary :
                 selected ? context.theme.colorScheme.onTertiaryContainer
+                : premiumDarkMaterial && !message.isFromMe!
+                ? Colors.white
                 : ss.settings.colorfulBubbles.value && !message.isFromMe!
                 ? getBubbleColors().first.oppositeLightenOrDarken(75) : null,
             hideBodyText: widget.subjectOnly,
@@ -149,6 +163,8 @@ class _TextBubbleState extends CustomState<TextBubble, void, MessageWidgetContro
             message,
             colorOverride: message.dateScheduled != null ? context.theme.colorScheme.primary :
               selected ? context.theme.colorScheme.onTertiaryContainer
+                : premiumDarkMaterial && !message.isFromMe!
+                ? Colors.white
                 : ss.settings.colorfulBubbles.value && !message.isFromMe!
                 ? getBubbleColors().first.oppositeLightenOrDarken(75) : null,
             hideBodyText: widget.subjectOnly,

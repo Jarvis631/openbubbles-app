@@ -64,6 +64,9 @@ class ConversationViewState extends OptimizedState<ConversationView> {
 
   @override
   Widget build(BuildContext context) {
+    final premiumDarkMaterial = ss.settings.skin.value == Skins.Material &&
+        Theme.of(context).brightness == Brightness.dark;
+    final serviceColor = chat.isIMessage ? const Color(0xFF087DFF) : const Color(0xFF30B64B);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         systemNavigationBarColor: ss.settings.immersiveMode.value
@@ -76,10 +79,10 @@ class ConversationViewState extends OptimizedState<ConversationView> {
       child: Obx(() => Theme(
         data: context.theme.copyWith(
           // in case some components still use legacy theming
-          primaryColor: context.theme.colorScheme.bubble(context, chat.isIMessage),
+          primaryColor: premiumDarkMaterial ? serviceColor : context.theme.colorScheme.bubble(context, chat.isIMessage),
           colorScheme: context.theme.colorScheme.copyWith(
-            primary: context.theme.colorScheme.bubble(context, chat.isIMessage),
-            onPrimary: context.theme.colorScheme.onBubble(context, chat.isIMessage),
+            primary: premiumDarkMaterial ? serviceColor : context.theme.colorScheme.bubble(context, chat.isIMessage),
+            onPrimary: premiumDarkMaterial ? Colors.white : context.theme.colorScheme.onBubble(context, chat.isIMessage),
             surface: ss.settings.monetTheming.value == Monet.full
                 ? null
                 : (context.theme.extensions[BubbleColors] as BubbleColors?)?.receivedBubbleColor,
@@ -114,7 +117,7 @@ class ConversationViewState extends OptimizedState<ConversationView> {
             top: false,
             bottom: false,
             child: Scaffold(
-              backgroundColor: ss.settings.windowEffect.value != WindowEffect.disabled ? Colors.transparent : context.theme.colorScheme.background,
+              backgroundColor: premiumDarkMaterial ? const Color(0xFF081226) : ss.settings.windowEffect.value != WindowEffect.disabled ? Colors.transparent : context.theme.colorScheme.background,
               extendBodyBehindAppBar: true,
               appBar: PreferredSize(
                   preferredSize: Size(ns.width(context), ((kIsDesktop ? (!iOS ? 25 : 5) : 0) + 90 * (iOS ? ss.settings.avatarScale.value : 0) + (!iOS ? kToolbarHeight : 0) + (controller.suggestedContact.value != null || controller.suggestShare.value ? 68 : 0))),

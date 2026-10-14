@@ -120,6 +120,11 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
   }
 
   List<Color> getBubbleColors() {
+    if (ss.settings.skin.value == Skins.Material && Theme.of(context).brightness == Brightness.dark) {
+      final color = widget.cvController.chat.isIMessage
+          ? const Color(0xFF16408B) : const Color(0xFF245C39);
+      return [color, color];
+    }
     List<Color> bubbleColors = [context.theme.colorScheme.properSurface, context.theme.colorScheme.properSurface];
     if (ss.settings.colorfulBubbles.value && !message.isFromMe!) {
       if (message.handle?.color == null) {

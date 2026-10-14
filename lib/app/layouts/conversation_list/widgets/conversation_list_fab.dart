@@ -116,9 +116,29 @@ class _ConversationListFABState extends CustomState<ConversationListFAB, void, C
       ],
     ));
 
+    final premiumDarkMaterial = material && !kIsDesktop && !kIsWeb &&
+        Theme.of(context).brightness == Brightness.dark;
     return ThemeSwitcher(
       iOSSkin: widget,
-      materialSkin: AnimatedCrossFade(
+      materialSkin: premiumDarkMaterial ? AnimatedCrossFade(
+        crossFadeState: controller.selectedChats.isEmpty ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+        duration: const Duration(milliseconds: 200),
+        secondChild: const SizedBox.shrink(),
+        firstChild: InkWell(
+          onLongPress: ss.settings.cameraFAB.value ? () => controller.openCamera(context) : null,
+          child: CallbackShortcuts(
+            bindings: _newMessageShortcuts,
+            child: FloatingActionButton(
+              focusNode: controller.newMessageFocusNode,
+              tooltip: 'New message',
+              backgroundColor: const Color(0xFF078EFF),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              onPressed: () => controller.openNewChatCreator(context),
+              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 26),
+            ),
+          ),
+        ),
+      ) : AnimatedCrossFade(
         crossFadeState: controller.selectedChats.isEmpty
             ? CrossFadeState.showFirst : CrossFadeState.showSecond,
         alignment: Alignment.center,

@@ -26,6 +26,30 @@ class _MaterialHeaderState extends CustomState<MaterialHeader, void, Conversatio
 
   @override
   Widget build(BuildContext context) {
+    final premium = !kIsDesktop && !kIsWeb && Theme.of(context).brightness == Brightness.dark &&
+        !showArchived && !showUnknown && !showDeleted;
+    if (premium && controller.selectedChats.isEmpty) {
+      return SafeArea(
+        bottom: false,
+        child: Container(
+          color: const Color(0xFF081226),
+          height: 66,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(children: [
+            const Expanded(child: Text('Messages', style: TextStyle(color: Colors.white,
+                fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.8))),
+            IconButton(
+              tooltip: 'Search messages',
+              onPressed: () => ns.pushLeft(context, SearchView()),
+              icon: const Icon(Icons.search_rounded, color: Color(0xFFE9F2FF), size: 26),
+              style: IconButton.styleFrom(backgroundColor: const Color(0xFF15223C)),
+            ),
+            const SizedBox(width: 6),
+            const OverflowMenu(),
+          ]),
+        ),
+      );
+    }
     return Stack(
       children: [
         Obx(() => Container(

@@ -56,7 +56,7 @@ class _MaterialConversationTileState extends CustomState<MaterialConversationTil
           mouseCursor: MouseCursor.defer,
           dense: ss.settings.denseChatTiles.value,
           visualDensity: ss.settings.denseChatTiles.value ? VisualDensity.compact : null,
-          minVerticalPadding: ss.settings.denseChatTiles.value ? 7.5 : 10,
+          minVerticalPadding: ss.settings.denseChatTiles.value ? 7.5 : 13,
           title: Obx(() => ChatTitle(
                 parentController: controller,
                 style: context.theme.textTheme.bodyLarge!
@@ -86,7 +86,7 @@ class _MaterialConversationTileState extends CustomState<MaterialConversationTil
                         .apply(fontSizeFactor: 1.05),
                   );
       }),
-          contentPadding: const EdgeInsets.only(left: 6, right: 16),
+          contentPadding: const EdgeInsets.only(left: 9, right: 16),
           leading: leading,
           trailing: widget.deletedMode ? Builder(builder: (context) {
                   DateTime oldestDeletion = DateTime.now();

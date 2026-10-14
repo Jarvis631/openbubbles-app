@@ -1,4 +1,5 @@
 import 'package:bluebubbles/helpers/helpers.dart';
+import 'package:bluebubbles/app/layouts/conversation_list/pages/premium_material_inbox.dart';
 import 'package:bluebubbles/app/layouts/conversation_list/pages/conversation_list.dart';
 import 'package:bluebubbles/app/layouts/conversation_list/widgets/conversation_list_fab.dart';
 import 'package:bluebubbles/app/layouts/conversation_list/widgets/header/material_header.dart';
@@ -8,6 +9,7 @@ import 'package:bluebubbles/app/wrappers/scrollbar_wrapper.dart';
 import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:get/get.dart';
@@ -48,6 +50,8 @@ class _MaterialConversationListState extends OptimizedState<MaterialConversation
 
   @override
   Widget build(BuildContext context) {
+    final premium = !kIsDesktop && !kIsWeb && !showArchived && !showUnknown && !showDeleted &&
+        Theme.of(context).brightness == Brightness.dark;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: <T>(bool didPop, T? other) {
@@ -64,20 +68,21 @@ class _MaterialConversationListState extends OptimizedState<MaterialConversation
         }
       },
       child: Container(
-        color: backgroundColor,
+        color: premium ? const Color(0xFF081226) : backgroundColor,
         padding: EdgeInsets.only(top: kIsDesktop ? 30 : 0),
         child: Scaffold(
           appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
+            preferredSize: Size.fromHeight(premium ? 66 : 60),
             child: MaterialHeader(parentController: controller),
           ),
-          backgroundColor: backgroundColor,
-          extendBodyBehindAppBar: true,
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+          backgroundColor: premium ? const Color(0xFF081226) : backgroundColor,
+          extendBodyBehindAppBar: !premium,
+          floatingActionButtonLocation: premium ? FloatingActionButtonLocation.endFloat : FloatingActionButtonLocation.centerFloat,
+          bottomNavigationBar: premium ? PremiumMaterialBottomBar(controller: controller) : null,
           floatingActionButton: !showArchived && !showUnknown && !showDeleted
               ? ConversationListFAB(parentController: controller)
               : const SizedBox.shrink(),
-          body: Obx(() {
+          body: premium ? PremiumMaterialInbox(parentController: controller) : Obx(() {
             final _chats = showDeleted ? deletedChats : chats.chats.archivedHelper(showArchived).unknownSendersHelper(showUnknown);
 
             if (!chats.loadedChatBatch.value || _chats.isEmpty) {
