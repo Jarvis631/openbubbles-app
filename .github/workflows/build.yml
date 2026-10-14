@@ -1,5 +1,14 @@
-on: [ push, pull_request ]
 name: Build
+
+# Only trusted pushes to our Alpha development branch get signing credentials.
+on:
+  push:
+    branches:
+      - feature/premium-samsung-ui
+
+permissions:
+  contents: read
+
 jobs:
   build:
     name: OpenBubbles APK
@@ -15,9 +24,11 @@ jobs:
           large-packages: true
           swap-storage: true
 
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+          persist-credentials: false
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -35,14 +46,15 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      
+
       - name: Setup Android SDK
         uses: amyu/setup-android@v5
 
       - name: Install Protobuf compiler
         run: sudo apt-get install -y protobuf-compiler
 
-      - name: Set up fake Fairplay keys
+      - name: Set up placeholder FairPlay keys for compilation
+        shell: bash
         run: |
           mkdir -p rustpush/certs/fairplay
 
@@ -64,12 +76,54 @@ jobs:
               cp rustpush/certs/legacy-fairplay/fairplay.crt rustpush/certs/fairplay/$name.crt
           done
 
-      # First run is expected to fail until ffmpeg_kit_flutter_new is fixed.
-      - name: Run Build Script
+      # Gradle's debug signing configuration expects ~/.android/debug.keystore,
+      # alias androiddebugkey, and password android. Import the same private key
+      # each run to retain its fingerprint instead of generating a fresh key.
+      - name: Restore stable Alpha debug signing key
+        shell: bash
+        env:
+          ALPHA_KEYSTORE_BASE64: ${{ secrets.ALPHA_KEYSTORE_BASE64 }}
+          ALPHA_KEYSTORE_PASSWORD: ${{ secrets.ALPHA_KEYSTORE_PASSWORD }}
         run: |
-          flutter build apk --flavor alpha --debug --target-platform android-arm64
-      
-      - uses: actions/upload-artifact@v4
+          set -euo pipefail
+          if [[ -z "$ALPHA_KEYSTORE_BASE64" || -z "$ALPHA_KEYSTORE_PASSWORD" ]]; then
+            echo 'Missing Alpha signing secrets. Stopping to avoid a wrongly signed APK.' >&2
+            exit 1
+          fi
+
+          umask 077
+          mkdir -p "$HOME/.android"
+          printf '%s' "$ALPHA_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/alpha-signing.p12"
+          keytool -list \
+            -keystore "$RUNNER_TEMP/alpha-signing.p12" \
+            -storetype PKCS12 \
+            -storepass "$ALPHA_KEYSTORE_PASSWORD" \
+            -alias openbubbles-alpha > /dev/null
+
+          rm -f "$HOME/.android/debug.keystore"
+          keytool -importkeystore \
+            -srckeystore "$RUNNER_TEMP/alpha-signing.p12" \
+            -srcstoretype PKCS12 \
+            -srcstorepass "$ALPHA_KEYSTORE_PASSWORD" \
+            -srcalias openbubbles-alpha \
+            -destkeystore "$HOME/.android/debug.keystore" \
+            -deststoretype JKS \
+            -deststorepass android \
+            -destkeypass android \
+            -destalias androiddebugkey \
+            -noprompt
+          rm -f "$RUNNER_TEMP/alpha-signing.p12"
+          keytool -list \
+            -keystore "$HOME/.android/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey > /dev/null
+
+      - name: Run Build Script
+        run: flutter build apk --flavor alpha --debug --target-platform android-arm64
+
+      - name: Upload Alpha Debug APK
+        uses: actions/upload-artifact@v4
         with:
           name: Alpha Debug APK
           path: build/app/outputs/flutter-apk/app-alpha-debug.apk
+          if-no-files-found: error
